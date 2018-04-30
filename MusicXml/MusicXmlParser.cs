@@ -8,9 +8,11 @@ using Encoding = MusicXml.Domain.Encoding;
 
 namespace MusicXml
 {
+   
 	public static class MusicXmlParser
 	{
-		public static Score GetScore(string filename)
+        
+        public static Score GetScore(string filename)
 		{
 			var document = GetXmlDocument(filename);
 
@@ -98,6 +100,12 @@ namespace MusicXml
 									var newNote = GetNote(node);
 									measureElement = new MeasureElement {Type = MeasureElementType.Note, Element = newNote};
 								}
+                                else if (node.Name == "barline")
+                                {
+                                    var newbarline = GetBarline(node);
+                                    measureElement = new MeasureElement { Type = MeasureElementType.Barline, Element = newbarline };
+
+                                }
 								else if (node.Name == "backup")
 								{
 									measureElement = new MeasureElement {Type = MeasureElementType.Backup, Element = GetBackupElement(node)};
@@ -187,7 +195,53 @@ namespace MusicXml
 			return note;
 		}
 
-		private static Pitch GetPitch(XmlNode noteNode)
+        private static Barline GetBarline(XmlNode barlineNode)
+        {
+            var barline = new Barline();
+
+            if (barlineNode.Attributes != null)
+            {
+                var barlineLocationAttribute = barlineNode.Attributes["location"];
+                decimal w;
+                if (barlineLocationAttribute != null)
+                    barline.location = barlineLocationAttribute.InnerText;
+            }
+
+            var repeatNode = barlineNode.SelectSingleNode("repeat");
+            if (repeatNode != null)
+            {
+                if (repeatNode.Attributes != null)
+                {
+                    var barlineDirectionAttribute = repeatNode.Attributes["direction"];
+                    if (barlineDirectionAttribute != null)
+                        barline.direction = barlineDirectionAttribute.InnerText;
+                }
+            }
+
+            var endingNode = barlineNode.SelectSingleNode("ending");
+            if (endingNode != null)
+            {
+                if (endingNode.Attributes != null)
+                {
+                    var endingNumberAttribute = endingNode.Attributes["number"];
+                    if (endingNumberAttribute != null)
+                        barline.endingNumber = Convert.ToInt32(endingNumberAttribute.InnerText);
+                    var endingTypeAttribute = endingNode.Attributes["type"];
+                    if (endingTypeAttribute != null)
+                        barline.endingType = endingTypeAttribute.InnerText;
+
+                }  
+
+            }
+           
+
+
+
+
+            return barline;
+        }
+
+        private static Pitch GetPitch(XmlNode noteNode)
 		{
 			var pitch = new Pitch();
 			var pitchNode = noteNode.SelectSingleNode("pitch");
@@ -199,7 +253,7 @@ namespace MusicXml
 
 				var alterNode = pitchNode.SelectSingleNode("alter");
 				if (alterNode != null)
-					pitch.Alter = Convert.ToInt32(alterNode.InnerText);
+					pitch.Alter = Convert.ToDouble(alterNode.InnerText);
 
 				var octaveNode = pitchNode.SelectSingleNode("octave");
 				if (octaveNode != null)

@@ -11,7 +11,7 @@ namespace MusicXml.Domain
 			Step = new Char();
 		}
 
-		public int Alter { get; internal set; }
+		public double Alter { get; internal set; }
 
 		public int Octave { get; internal set; }
 
